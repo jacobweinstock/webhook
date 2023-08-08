@@ -9,10 +9,10 @@ help:
 
 all: build release release-windows
 
-build: deps ## Build the project
-	go build -ldflags "-linkmode external -extldflags=-static"
+build: ## Build the project
+	CGO_ENABLED=0 go build
 
-release: clean deps ## Generate releases for unix systems
+release: clean ## Generate releases for unix systems
 	@for arch in $(ARCHS);\
 	do \
 		for os in $(OS);\
@@ -24,7 +24,7 @@ release: clean deps ## Generate releases for unix systems
 		done \
 	done
 
-release-windows: clean deps ## Generate release for windows
+release-windows: clean ## Generate release for windows
 	@for arch in $(ARCHS);\
 	do \
 		echo "Building windows-$$arch"; \
@@ -33,11 +33,8 @@ release-windows: clean deps ## Generate release for windows
 		tar cz -C build -f build/webhook-windows-$$arch.tar.gz webhook-windows-$$arch; \
 	done
 
-test: deps ## Execute tests
-	go test ./...
-
-deps: ## Install dependencies using go get
-	go get -d -v -t ./...
+test: ## Execute tests
+	go test -v ./...
 
 clean: ## Remove building artifacts
 	rm -rf build
