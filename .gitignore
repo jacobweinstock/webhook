@@ -4,3 +4,4 @@ coverage
 webhook
 /test/hookecho
 build
+dist/
