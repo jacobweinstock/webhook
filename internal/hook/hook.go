@@ -920,7 +920,10 @@ func (r MatchRule) Evaluate(req *Request) (bool, error) {
 
 	arg, err := r.Parameter.Get(req)
 	if err == nil {
-		payload := r.signaturePayload(req.Body, req.Headers)
+		payload, err := r.signaturePayload(req.Body, req.Headers)
+		if err != nil {
+			return false, err
+		}
 		switch r.Type {
 		case MatchValue:
 			return compare(arg, r.Value), nil
@@ -950,16 +953,19 @@ func (r MatchRule) Evaluate(req *Request) (bool, error) {
 }
 
 // signaturePayload will concatenate the request body with header values from headers specified in r.Parameter.SignaturePayloadHeaders.
-func (r MatchRule) signaturePayload(body []byte, headers map[string]interface{}) []byte {
+func (r MatchRule) signaturePayload(body []byte, headers map[string]interface{}) ([]byte, error) {
 	for _, elem := range r.Parameter.SignaturePayloadHeaders {
 		h, found := headers[elem]
+		if !found {
+			return nil, &SignatureError{Signature: "required header not found"}
+		}
 		header := fmt.Sprintf("%s", h)
-		if found && header != "" {
+		if header != "" {
 			body = append(body, []byte(header)...)
 		}
 	}
 
-	return body
+	return body, nil
 }
 
 // compare is a helper function for constant time string comparisons.
